@@ -1,3 +1,5 @@
+mod prompt;
+
 use async_openai;
 use tokio;
 use image;
@@ -31,6 +33,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let image = format!("data:image/jpeg;base64,{base64_image}");
 	
 	println!("trying to create a request...");
+	// create a request foramtter, which loads various different prompts 
+	// and then output a request for generation. 
+	// the generation must be running in parallel. 
 	let request = async_openai::types::CreateChatCompletionRequestArgs::default()
 	    .model("minicpm-v")
 		.response_format(
@@ -65,7 +70,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.build()?;
 	
 	println!("trying to fetch response...");
+	// create a struct that represents the data, it should be able to save the results
+	// into a json file locally, for later training and other usages. 
 	let response = client.chat().create(request).await?;
+	
+	// the final data structure: 
+	// score_matrics: [30; i32], a vector that contains softness-hardness pair generated
+	// by the 15 pairs. each softness-hardness pair is the average of the generations of 
+	// each prompt. 
 	
 	println!("accessing the response...");
 	println!("{:?}", response.choices[0].message.content);
